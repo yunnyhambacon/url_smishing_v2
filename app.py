@@ -1,5 +1,6 @@
 import os
 import sys
+import requests
 from flask import Flask, render_template, request, jsonify
 import joblib
 import pandas as pd
@@ -15,12 +16,22 @@ from feature_extract import parse_url_features
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
+# 모델 파일 다운로드 함수
+def download_model_if_needed():
+    model_path = os.path.join(BASE_DIR, "random_forest_model.pkl")
+    if not os.path.exists(model_path):
+        print("[INFO] 모델 파일 다운로드 시작")
+        url = "https://drive.google.com/uc?export=download&id=1adYNGEBYDDXl508ru3-iIJn6erbS-tZp"
+        response = requests.get(url)
+        with open(model_path, "wb") as f:
+            f.write(response.content)
+        print("[INFO] 모델 다운로드 완료")
+    return model_path
+
 # 모델 로드
-# Windows 절대경로 예시
-MODEL_PATH = r"C:\Users\soyun\Desktop\flask\random_forest_model.pkl"
+MODEL_PATH = download_model_if_needed()
 model = joblib.load(MODEL_PATH)
 print(f"[INFO] 모델 로드 성공: {MODEL_PATH} (type={type(model)})")
-
 
 # 루트 페이지
 @app.route("/")
