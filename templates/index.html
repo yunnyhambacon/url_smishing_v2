@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>🛡️ 안심 링크 판별 시스템 🛡️</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: 'Malgun Gothic', Arial, sans-serif;
+      background-color: #ffffff;
+      text-align: center;
+      color: #333;
+    }
+
+    /* 제목 스타일 */
+    h1 {
+      font-size: 2.8rem;
+      font-weight: bold;
+      margin: 1rem 0 0.5rem;
+      color: #222;
+    }
+
+    /* subtitle 크기 키우기 */
+    p.subtitle {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      color: #555;
+    }
+
+    /* 입력창 확대 */
+    input[type="text"] {
+      width: 90%;
+      max-width: 700px;
+      padding: 1.5rem;
+      font-size: 1.3rem;
+      border: 3px solid #888;
+      border-radius: 0.8rem;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+    input[type="text"]:focus {
+      border-color: #00e1ff;
+      box-shadow: 0 0 10px rgba(0,225,255,0.6);
+    }
+
+    /* 버튼 스타일 (네온 효과 제거) */
+    button {
+      padding: 1rem 2rem;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #fff;
+      background-color: #007bff;
+      border: none;
+      border-radius: 1rem;
+      cursor: pointer;
+      transition: background-color .3s, box-shadow .3s;
+    }
+    button:hover {
+      background-color: #0056b3;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 결과 표시 */
+    #result {
+      margin-top: 2rem;
+      font-size: 2rem;
+      font-weight: bold;
+      padding: 1rem;
+      border-radius: 1rem;
+      display: inline-block;
+      min-width: 300px;
+      transition: transform .3s;
+    }
+    #result.show {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>🛡️ 안심 링크 판별 시스템 🛡️</h1>
+  <p class="subtitle">
+    URL을 입력하면 위험도를 분석해드립니다.
+  </p>
+
+  <form id="urlForm">
+    <input
+      type="text"
+      id="urlInput"
+      placeholder="예: https://example.com"
+      required
+      aria-label="URL 입력"
+    >
+    <br>
+    <button type="submit">링크 확인</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    const form = document.getElementById('urlForm');
+    const input = document.getElementById('urlInput');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = input.value.trim();
+      result.className = '';
+      result.style.color = '#333';
+      result.innerText = '🔄 확인 중 입니다...';
+
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        const prob = data.bad_prob;
+        let msg, bg;
+
+        if (prob >= 0.7) {
+          msg = `🚨 매우 위험합니다! (위험도: ${prob})`;
+          bg  = 'rgba(255, 0, 0, 0.1)';
+          result.style.color = 'red';
+        } else if (prob >= 0.3) {
+          msg = `⚠️ 주의가 필요합니다. (위험도: ${prob})`;
+          bg  = 'rgba(255, 165, 0, 0.1)';
+          result.style.color = 'orange';
+        } else {
+          msg = `✅ 안전한 링크입니다. (위험도: ${prob})`;
+          bg  = 'rgba(0, 128, 0, 0.1)';
+          result.style.color = 'green';
+        }
+
+        result.innerText = msg;
+        result.style.backgroundColor = bg;
+        result.classList.add('show');
+      } catch (err) {
+        result.innerText = '❗ 예측 중 오류가 발생했습니다.';
+        result.style.color = 'black';
+      }
+    });
+  </script>
+</body>
+</html>
