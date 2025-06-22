@@ -48,6 +48,7 @@ def predict():
     prob = model.predict_proba(df)[0][1]
     return jsonify({"bad_prob": round(prob, 3)})
 
-# 서버 실행
 if __name__ == "__main__":
-    app.run(debug=True, port=8000)
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host="0.0.0.0", port=port)
